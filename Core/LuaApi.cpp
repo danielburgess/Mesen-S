@@ -88,6 +88,7 @@ int LuaApi::GetLibrary(lua_State *lua)
 		{ "takeScreenshot", LuaApi::TakeScreenshot },
 		{ "isKeyPressed", LuaApi::IsKeyPressed },
 		{ "getInput", LuaApi::GetInput },
+		{ "setInput", LuaApi::SetInput },
 		{ "getAccessCounters", LuaApi::GetAccessCounters },
 		{ "resetAccessCounters", LuaApi::ResetAccessCounters },
 		{ "getState", LuaApi::GetState },
@@ -638,6 +639,64 @@ int LuaApi::GetInput(lua_State *lua)
 	lua_pushboolvalue(left, controller->IsPressed(SnesController::Buttons::Left));
 	lua_pushboolvalue(right, controller->IsPressed(SnesController::Buttons::Right));
 	return 1;
+}
+
+int LuaApi::SetInput(lua_State *lua)
+{
+	LuaCallHelper l(lua);
+	lua_settop(lua, 3);
+	
+	bool allowUserInput = l.ReadBool();
+
+	luaL_checktype(lua, 2, LUA_TTABLE);
+	lua_getfield(lua, 2, "a");
+	lua_getfield(lua, 2, "b");
+	lua_getfield(lua, 2, "x");
+	lua_getfield(lua, 2, "y");
+	lua_getfield(lua, 2, "l");
+	lua_getfield(lua, 2, "r");
+	lua_getfield(lua, 2, "start");
+	lua_getfield(lua, 2, "select");
+	lua_getfield(lua, 2, "up");
+	lua_getfield(lua, 2, "down");
+	lua_getfield(lua, 2, "left");
+	lua_getfield(lua, 2, "right");
+
+	Nullable<bool> right = l.ReadOptionalBool();
+	Nullable<bool> left = l.ReadOptionalBool();
+	Nullable<bool> down = l.ReadOptionalBool();
+	Nullable<bool> up = l.ReadOptionalBool();
+	Nullable<bool> select = l.ReadOptionalBool();
+	Nullable<bool> start = l.ReadOptionalBool();
+	Nullable<bool> br = l.ReadOptionalBool();
+	Nullable<bool> bl = l.ReadOptionalBool();
+	Nullable<bool> y = l.ReadOptionalBool();
+	Nullable<bool> x = l.ReadOptionalBool();
+	Nullable<bool> b = l.ReadOptionalBool();
+	Nullable<bool> a = l.ReadOptionalBool();
+
+	lua_pop(lua, 1);
+	int port = l.ReadInteger();
+
+	errorCond(port < 0 || port > 3, "Invalid port number - must be between 0 to 3");
+
+	shared_ptr<SnesController> controller = std::dynamic_pointer_cast<SnesController>(_console->GetControlManager()->GetControlDevice(port));
+	errorCond(controller == nullptr, "Input port must be connected to a standard controller");
+
+	if(right.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::Right, right.Value);
+	if(left.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::Left, left.Value);
+	if(down.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::Down, down.Value);
+	if(up.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::Up, up.Value);
+	if(select.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::Select, select.Value);
+	if(start.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::Start, start.Value);
+	if(br.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::R, br.Value);
+	if(bl.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::L, bl.Value);
+	if(y.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::Y, y.Value);
+	if(x.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::X, x.Value);
+	if(b.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::B, b.Value);
+	if(a.HasValue || !allowUserInput) controller->SetBitValue(SnesController::Buttons::A, a.Value);
+
+	return l.ReturnCount();
 }
 
 int LuaApi::GetAccessCounters(lua_State *lua)
