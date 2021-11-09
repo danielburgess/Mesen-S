@@ -20,6 +20,25 @@ port - *Integer* The port number to read (0 to 4)
 **Description**  
 Returns a table containing the status of all 12 buttons: { a, b, x, y, l, r, select, start, up, down, left, right }   
 
+
+## setInput ##
+
+**Syntax**
+
+    emu.setInput(port, input)
+
+**Parameters**  
+port - *Integer* The port number to apply the input to (0 to 3)  
+input - *Table* A table containing the state of some (or all) of the 12 buttons (same format as returned by [getInput](#getinput))
+
+**Return value**  
+*None*
+
+**Description**  
+Buttons enabled or disabled via setInput will keep their state until the next *inputPolled* event.  
+If a button's value is not specified to either true or false in the *input* argument, then the player retains control of that button.  For example, setInput(0, { select = false, start = false}) will prevent the player 1 from using both the start and select buttons, but all other buttons will still work as normal.
+To properly control the emulation, it is recommended to use this function within a callback for the *inputPolled* event. Otherwise, the inputs may not be applied before the ROM has the chance to read them.
+
 ## getMouseState ##
 
 **Syntax**  
